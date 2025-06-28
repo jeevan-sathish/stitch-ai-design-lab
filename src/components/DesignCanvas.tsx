@@ -1,5 +1,6 @@
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { Canvas, FabricText, FabricImage, Circle, Rect } from 'fabric';
 
 interface DesignCanvasProps {
   garmentType: string;
@@ -17,80 +18,97 @@ export const DesignCanvas = ({
   darkMode 
 }: DesignCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [fabricCanvas, setFabricCanvas] = useState<Canvas | null>(null);
 
   useEffect(() => {
-    if (canvasRef.current) {
-      setCanvasRef(canvasRef);
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      
-      // Set canvas size
-      canvas.width = 400;
-      canvas.height = 500;
-      
-      // Clear and set background
-      ctx.fillStyle = darkMode ? '#1F2937' : '#F9FAFB';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      // Draw garment outline based on type
-      drawGarmentOutline(ctx, garmentType, darkMode);
-    }
-  }, [garmentType, darkMode]);
+    if (canvasRef.current && !fabricCanvas) {
+      const canvas = new Canvas(canvasRef.current, {
+        width: 400,
+        height: 500,
+        backgroundColor: darkMode ? '#1F2937' : '#F9FAFB',
+      });
 
-  const drawGarmentOutline = (ctx: CanvasRenderingContext2D, type: string, dark: boolean) => {
-    ctx.strokeStyle = dark ? '#6B7280' : '#9CA3AF';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([5, 5]);
+      // Initialize drawing brush
+      canvas.freeDrawingBrush.color = '#3B82F6';
+      canvas.freeDrawingBrush.width = 3;
+
+      setFabricCanvas(canvas);
+      setCanvasRef(canvas);
+
+      // Draw garment outline
+      drawGarmentOutline(canvas, garmentType, darkMode);
+
+      return () => {
+        canvas.dispose();
+      };
+    }
+  }, [canvasRef.current]);
+
+  useEffect(() => {
+    if (fabricCanvas) {
+      fabricCanvas.backgroundColor = darkMode ? '#1F2937' : '#F9FAFB';
+      fabricCanvas.renderAll();
+      drawGarmentOutline(fabricCanvas, garmentType, darkMode);
+    }
+  }, [garmentType, darkMode, fabricCanvas]);
+
+  const drawGarmentOutline = (canvas: Canvas, type: string, dark: boolean) => {
+    // Clear existing outlines
+    const objects = canvas.getObjects().filter(obj => obj.name === 'garment-outline');
+    objects.forEach(obj => canvas.remove(obj));
+
+    const outlineColor = dark ? '#6B7280' : '#9CA3AF';
     
+    let outline;
     switch (type) {
       case 'shirt':
-        // Draw shirt outline
-        ctx.beginPath();
-        ctx.moveTo(100, 80);
-        ctx.lineTo(300, 80);
-        ctx.lineTo(320, 100);
-        ctx.lineTo(320, 200);
-        ctx.lineTo(300, 220);
-        ctx.lineTo(300, 400);
-        ctx.lineTo(100, 400);
-        ctx.lineTo(100, 220);
-        ctx.lineTo(80, 200);
-        ctx.lineTo(80, 100);
-        ctx.closePath();
-        ctx.stroke();
-        break;
-      case 'pant':
-        // Draw pant outline
-        ctx.beginPath();
-        ctx.moveTo(150, 50);
-        ctx.lineTo(250, 50);
-        ctx.lineTo(260, 250);
-        ctx.lineTo(230, 450);
-        ctx.lineTo(200, 450);
-        ctx.lineTo(200, 250);
-        ctx.lineTo(200, 250);
-        ctx.lineTo(170, 450);
-        ctx.lineTo(140, 450);
-        ctx.lineTo(140, 250);
-        ctx.closePath();
-        ctx.stroke();
+        outline = new Rect({
+          left: 80,
+          top: 80,
+          width: 240,
+          height: 320,
+          fill: 'transparent',
+          stroke: outlineColor,
+          strokeWidth: 2,
+          strokeDashArray: [5, 5],
+          selectable: false,
+          evented: false,
+          name: 'garment-outline'
+        });
         break;
       case 'dress':
-        // Draw dress outline
-        ctx.beginPath();
-        ctx.moveTo(120, 80);
-        ctx.lineTo(280, 80);
-        ctx.lineTo(300, 100);
-        ctx.lineTo(320, 400);
-        ctx.lineTo(80, 400);
-        ctx.lineTo(100, 100);
-        ctx.closePath();
-        ctx.stroke();
+        outline = new Rect({
+          left: 100,
+          top: 80,
+          width: 200,
+          height: 350,
+          fill: 'transparent',
+          stroke: outlineColor,
+          strokeWidth: 2,
+          strokeDashArray: [5, 5],
+          selectable: false,
+          evented: false,
+          name: 'garment-outline'
+        });
         break;
       default:
-        // Default rectangle
-        ctx.strokeRect(80, 80, 240, 320);
+        outline = new Rect({
+          left: 80,
+          top: 80,
+          width: 240,
+          height: 320,
+          fill: 'transparent',
+          stroke: outlineColor,
+          strokeWidth: 2,
+          strokeDashArray: [5, 5],
+          selectable: false,
+          evented: false,
+          name: 'garment-outline'
+        });
     }
+    
+    canvas.add(outline);
+    canvas.renderAll();
   };
 
   return (
@@ -112,7 +130,7 @@ export const DesignCanvas = ({
       </div>
       
       <div className="mt-4 text-center text-sm text-gray-500">
-        Click and drag to draw on your {garmentType}
+        Draw, add text, or upload images to design your {garmentType}
       </div>
     </div>
   );

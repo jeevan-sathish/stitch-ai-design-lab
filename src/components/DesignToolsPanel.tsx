@@ -1,5 +1,7 @@
+
 import { useState, useRef } from 'react';
 import { Brush, Type, Image, Palette, Undo, Redo, RotateCcw, Sparkles } from 'lucide-react';
+import { FabricText, FabricImage } from 'fabric';
 
 interface DesignToolsPanelProps {
   canvasRef: any;
@@ -12,7 +14,8 @@ export const DesignToolsPanel = ({ canvasRef, darkMode }: DesignToolsPanelProps)
   const [textInput, setTextInput] = useState('');
   const [showTextInput, setShowTextInput] = useState(false);
   const [showAIRefine, setShowAIRefine] = useState(false);
-  const [aiSuggestions, setAiSuggestions] = useState([]);
+  const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
+  const [isLoadingAI, setIsLoadingAI] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const tools = [
@@ -25,48 +28,122 @@ export const DesignToolsPanel = ({ canvasRef, darkMode }: DesignToolsPanelProps)
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
+    if (file && canvasRef) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        const img = document.createElement('img');
-        img.onload = () => {
-          if (canvasRef?.current) {
-            const canvas = canvasRef.current;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 50, 50, 100, 100);
-          }
+        const imgElement = document.createElement('img');
+        imgElement.onload = () => {
+          FabricImage.fromURL(e.target?.result as string).then((img) => {
+            img.set({
+              left: 100,
+              top: 100,
+              scaleX: 0.5,
+              scaleY: 0.5,
+            });
+            canvasRef.add(img);
+          });
         };
-        img.src = e.target?.result as string;
+        imgElement.src = e.target?.result as string;
       };
       reader.readAsDataURL(file);
     }
   };
 
   const refineTextWithAI = async () => {
+    if (!textInput.trim()) return;
+    
+    setIsLoadingAI(true);
     setShowAIRefine(true);
     
-    // Mock AI response for now - replace with actual Gemini API call
-    setTimeout(() => {
-      const mockSuggestions = [
+    try {
+      const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyDfre4670HNfsJcpQe039hdZ43roymvbag', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `Refine this text for a fashion design: "${textInput}". Provide 3 creative alternatives that would look good on clothing. Make them catchy and stylish. Return only the 3 alternatives, each on a new line.`
+            }]
+          }]
+        })
+      });
+
+      const data = await response.json();
+      const suggestions = data.candidates[0].content.parts[0].text.split('\n').filter((s: string) => s.trim());
+      setAiSuggestions(suggestions.slice(0, 3));
+    } catch (error) {
+      console.error('AI refinement failed:', error);
+      setAiSuggestions([
         `${textInput} - Premium Edition`,
         `Exclusive ${textInput} Collection`,
         `${textInput} - Crafted with Care`
-      ];
-      setAiSuggestions(mockSuggestions);
-    }, 1000);
+      ]);
+    } finally {
+      setIsLoadingAI(false);
+    }
   };
 
   const addTextToCanvas = (text: string) => {
-    if (canvasRef?.current) {
-      const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      ctx.font = '24px Inter, sans-serif';
-      ctx.fillStyle = color;
-      ctx.fillText(text, 100, 100);
+    if (canvasRef && text.trim()) {
+      const textObj = new FabricText(text, {
+        left: 150,
+        top: 150,
+        fontFamily: 'Inter, sans-serif',
+        fontSize: 24,
+        fill: color,
+        editable: true,
+      });
+      canvasRef.add(textObj);
+      canvasRef.setActiveObject(textObj);
     }
     setShowTextInput(false);
     setShowAIRefine(false);
     setTextInput('');
+    setAiSuggestions([]);
+  };
+
+  const handleToolClick = (toolId: string) => {
+    setActiveTool(toolId);
+    
+    if (!canvasRef) return;
+
+    if (toolId === 'brush') {
+      canvasRef.isDrawingMode = true;
+      canvasRef.freeDrawingBrush.color = color;
+      canvasRef.freeDrawingBrush.width = 3;
+    } else {
+      canvasRef.isDrawingMode = false;
+    }
+
+    if (toolId === 'text') {
+      setShowTextInput(true);
+    }
+    
+    if (toolId === 'image') {
+      fileInputRef.current?.click();
+    }
+  };
+
+  const handleUndo = () => {
+    // Simple undo - remove last added object
+    if (canvasRef) {
+      const objects = canvasRef.getObjects();
+      if (objects.length > 0) {
+        const lastObj = objects[objects.length - 1];
+        if (lastObj.name !== 'garment-outline') {
+          canvasRef.remove(lastObj);
+        }
+      }
+    }
+  };
+
+  const handleClear = () => {
+    if (canvasRef) {
+      const objects = canvasRef.getObjects().filter((obj: any) => obj.name !== 'garment-outline');
+      objects.forEach((obj: any) => canvasRef.remove(obj));
+    }
   };
 
   return (
@@ -87,11 +164,7 @@ export const DesignToolsPanel = ({ canvasRef, darkMode }: DesignToolsPanelProps)
             return (
               <button
                 key={tool.id}
-                onClick={() => {
-                  setActiveTool(tool.id);
-                  if (tool.id === 'text') setShowTextInput(true);
-                  if (tool.id === 'image') fileInputRef.current?.click();
-                }}
+                onClick={() => handleToolClick(tool.id)}
                 className={`p-3 rounded-xl border transition-all duration-200 flex flex-col items-center space-y-1 ${
                   isActive
                     ? darkMode
@@ -148,10 +221,11 @@ export const DesignToolsPanel = ({ canvasRef, darkMode }: DesignToolsPanelProps)
               {textInput && (
                 <button
                   onClick={refineTextWithAI}
-                  className="flex items-center space-x-1 bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors"
+                  disabled={isLoadingAI}
+                  className="flex items-center space-x-1 bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
                 >
                   <Sparkles className="h-4 w-4" />
-                  <span>AI Refine</span>
+                  <span>{isLoadingAI ? 'AI...' : 'AI Refine'}</span>
                 </button>
               )}
             </div>
@@ -160,8 +234,10 @@ export const DesignToolsPanel = ({ canvasRef, darkMode }: DesignToolsPanelProps)
             {showAIRefine && (
               <div className="space-y-2">
                 <p className="text-sm font-medium">AI Suggestions:</p>
-                {aiSuggestions.length === 0 ? (
+                {isLoadingAI ? (
                   <div className="text-sm text-gray-500">Generating suggestions...</div>
+                ) : aiSuggestions.length === 0 ? (
+                  <div className="text-sm text-red-500">No suggestions available</div>
                 ) : (
                   aiSuggestions.map((suggestion, index) => (
                     <button
@@ -184,11 +260,14 @@ export const DesignToolsPanel = ({ canvasRef, darkMode }: DesignToolsPanelProps)
 
         {/* Action Buttons */}
         <div className="grid grid-cols-3 gap-2">
-          <button className={`p-2 rounded-lg border transition-colors ${
-            darkMode 
-              ? 'border-gray-600 hover:bg-gray-700' 
-              : 'border-gray-300 hover:bg-gray-100'
-          }`}>
+          <button 
+            onClick={handleUndo}
+            className={`p-2 rounded-lg border transition-colors ${
+              darkMode 
+                ? 'border-gray-600 hover:bg-gray-700' 
+                : 'border-gray-300 hover:bg-gray-100'
+            }`}
+          >
             <Undo className="h-4 w-4 mx-auto" />
           </button>
           <button className={`p-2 rounded-lg border transition-colors ${
@@ -198,11 +277,14 @@ export const DesignToolsPanel = ({ canvasRef, darkMode }: DesignToolsPanelProps)
           }`}>
             <Redo className="h-4 w-4 mx-auto" />
           </button>
-          <button className={`p-2 rounded-lg border transition-colors ${
-            darkMode 
-              ? 'border-gray-600 hover:bg-gray-700' 
-              : 'border-gray-300 hover:bg-gray-100'
-          }`}>
+          <button 
+            onClick={handleClear}
+            className={`p-2 rounded-lg border transition-colors ${
+              darkMode 
+                ? 'border-gray-600 hover:bg-gray-700' 
+                : 'border-gray-300 hover:bg-gray-100'
+            }`}
+          >
             <RotateCcw className="h-4 w-4 mx-auto" />
           </button>
         </div>
