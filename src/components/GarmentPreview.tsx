@@ -1,6 +1,5 @@
-
 import { useState } from 'react';
-import { RotateLeft, RotateRight } from 'lucide-react';
+import { RotateCcw, RotateCw } from 'lucide-react';
 
 interface GarmentPreviewProps {
   garmentType: string;

@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { Brush, Type, Image, Palette, Undo, Redo, RotateCcw, Sparkles } from 'lucide-react';
 
@@ -29,7 +28,7 @@ export const DesignToolsPanel = ({ canvasRef, darkMode }: DesignToolsPanelProps)
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        const img = new Image();
+        const img = document.createElement('img');
         img.onload = () => {
           if (canvasRef?.current) {
             const canvas = canvasRef.current;
