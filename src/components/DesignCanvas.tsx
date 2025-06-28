@@ -144,7 +144,7 @@ export const DesignCanvas = ({
     }
     
     canvas.add(outline);
-    canvas.sendToBack(outline);
+    canvas.sendObjectToBack(outline);
     setGarmentOutline(outline);
     canvas.renderAll();
   };
