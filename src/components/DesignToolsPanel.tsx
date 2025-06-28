@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { Brush, Type, Image, Palette, Undo, Redo, RotateCcw, Sparkles } from 'lucide-react';
 import { FabricText, FabricImage } from 'fabric';
@@ -127,22 +126,20 @@ export const DesignToolsPanel = ({ canvasRef, darkMode }: DesignToolsPanelProps)
   };
 
   const handleUndo = () => {
-    // Simple undo - remove last added object
     if (canvasRef) {
       const objects = canvasRef.getObjects();
-      if (objects.length > 0) {
+      if (objects.length > 1) { // Keep at least the garment outline
         const lastObj = objects[objects.length - 1];
-        if (lastObj.name !== 'garment-outline') {
-          canvasRef.remove(lastObj);
-        }
+        canvasRef.remove(lastObj);
       }
     }
   };
 
   const handleClear = () => {
     if (canvasRef) {
-      const objects = canvasRef.getObjects().filter((obj: any) => obj.name !== 'garment-outline');
-      objects.forEach((obj: any) => canvasRef.remove(obj));
+      const objects = canvasRef.getObjects();
+      // Remove all objects except the first one (garment outline)
+      objects.slice(1).forEach((obj: any) => canvasRef.remove(obj));
     }
   };
 

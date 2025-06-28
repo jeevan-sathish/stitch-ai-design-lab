@@ -19,6 +19,7 @@ export const DesignCanvas = ({
 }: DesignCanvasProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [fabricCanvas, setFabricCanvas] = useState<Canvas | null>(null);
+  const [garmentOutline, setGarmentOutline] = useState<Rect | null>(null);
 
   useEffect(() => {
     if (canvasRef.current && !fabricCanvas) {
@@ -53,9 +54,10 @@ export const DesignCanvas = ({
   }, [garmentType, darkMode, fabricCanvas]);
 
   const drawGarmentOutline = (canvas: Canvas, type: string, dark: boolean) => {
-    // Clear existing outlines
-    const objects = canvas.getObjects().filter(obj => obj.name === 'garment-outline');
-    objects.forEach(obj => canvas.remove(obj));
+    // Remove existing outline if it exists
+    if (garmentOutline) {
+      canvas.remove(garmentOutline);
+    }
 
     const outlineColor = dark ? '#6B7280' : '#9CA3AF';
     
@@ -73,7 +75,6 @@ export const DesignCanvas = ({
           strokeDashArray: [5, 5],
           selectable: false,
           evented: false,
-          name: 'garment-outline'
         });
         break;
       case 'dress':
@@ -88,7 +89,6 @@ export const DesignCanvas = ({
           strokeDashArray: [5, 5],
           selectable: false,
           evented: false,
-          name: 'garment-outline'
         });
         break;
       default:
@@ -103,11 +103,11 @@ export const DesignCanvas = ({
           strokeDashArray: [5, 5],
           selectable: false,
           evented: false,
-          name: 'garment-outline'
         });
     }
     
     canvas.add(outline);
+    setGarmentOutline(outline);
     canvas.renderAll();
   };
 
