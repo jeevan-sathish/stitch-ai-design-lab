@@ -1,4 +1,4 @@
-import { Shirt, ShirtIcon, Package, Coat } from 'lucide-react';
+import { Shirt, ShirtIcon, Package } from 'lucide-react';
 
 interface ClothingSelectorProps {
   selected: string;
@@ -10,7 +10,7 @@ const garmentTypes = [
   { id: 'shirt', name: 'Shirt', icon: Shirt },
   { id: 'pant', name: 'Pant', icon: Package },
   { id: 'dress', name: 'Dress', icon: ShirtIcon },
-  { id: 'jacket', name: 'Jacket', icon: Coat },
+  { id: 'jacket', name: 'Jacket', icon: Package },
   { id: 'custom', name: 'Custom', icon: Package }
 ];
 
