@@ -29,9 +29,13 @@ export const DesignCanvas = ({
         backgroundColor: darkMode ? '#1F2937' : '#F9FAFB',
       });
 
-      // Initialize drawing brush
-      canvas.freeDrawingBrush.color = '#3B82F6';
-      canvas.freeDrawingBrush.width = 3;
+      // Wait for canvas to be fully initialized before setting up the brush
+      setTimeout(() => {
+        if (canvas.freeDrawingBrush) {
+          canvas.freeDrawingBrush.color = '#3B82F6';
+          canvas.freeDrawingBrush.width = 3;
+        }
+      }, 100);
 
       setFabricCanvas(canvas);
       setCanvasRef(canvas);
@@ -43,7 +47,7 @@ export const DesignCanvas = ({
         canvas.dispose();
       };
     }
-  }, [canvasRef.current]);
+  }, [canvasRef.current, darkMode]);
 
   useEffect(() => {
     if (fabricCanvas) {

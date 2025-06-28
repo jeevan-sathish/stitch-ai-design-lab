@@ -1,3 +1,4 @@
+
 import { useState, useRef } from 'react';
 import { Brush, Type, Image, Palette, Undo, Redo, RotateCcw, Sparkles } from 'lucide-react';
 import { FabricText, FabricImage } from 'fabric';
@@ -110,8 +111,11 @@ export const DesignToolsPanel = ({ canvasRef, darkMode }: DesignToolsPanelProps)
 
     if (toolId === 'brush') {
       canvasRef.isDrawingMode = true;
-      canvasRef.freeDrawingBrush.color = color;
-      canvasRef.freeDrawingBrush.width = 3;
+      // Ensure brush exists before setting properties
+      if (canvasRef.freeDrawingBrush) {
+        canvasRef.freeDrawingBrush.color = color;
+        canvasRef.freeDrawingBrush.width = 3;
+      }
     } else {
       canvasRef.isDrawingMode = false;
     }
@@ -131,8 +135,14 @@ export const DesignToolsPanel = ({ canvasRef, darkMode }: DesignToolsPanelProps)
       if (objects.length > 1) { // Keep at least the garment outline
         const lastObj = objects[objects.length - 1];
         canvasRef.remove(lastObj);
+        canvasRef.renderAll();
       }
     }
+  };
+
+  const handleRedo = () => {
+    // Simple redo functionality - in a real app you'd maintain a history stack
+    console.log('Redo functionality would be implemented here');
   };
 
   const handleClear = () => {
@@ -140,6 +150,7 @@ export const DesignToolsPanel = ({ canvasRef, darkMode }: DesignToolsPanelProps)
       const objects = canvasRef.getObjects();
       // Remove all objects except the first one (garment outline)
       objects.slice(1).forEach((obj: any) => canvasRef.remove(obj));
+      canvasRef.renderAll();
     }
   };
 
@@ -267,11 +278,14 @@ export const DesignToolsPanel = ({ canvasRef, darkMode }: DesignToolsPanelProps)
           >
             <Undo className="h-4 w-4 mx-auto" />
           </button>
-          <button className={`p-2 rounded-lg border transition-colors ${
-            darkMode 
-              ? 'border-gray-600 hover:bg-gray-700' 
-              : 'border-gray-300 hover:bg-gray-100'
-          }`}>
+          <button 
+            onClick={handleRedo}
+            className={`p-2 rounded-lg border transition-colors ${
+              darkMode 
+                ? 'border-gray-600 hover:bg-gray-700' 
+                : 'border-gray-300 hover:bg-gray-100'
+            }`}
+          >
             <Redo className="h-4 w-4 mx-auto" />
           </button>
           <button 

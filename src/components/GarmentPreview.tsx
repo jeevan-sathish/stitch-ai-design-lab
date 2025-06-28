@@ -1,5 +1,5 @@
+
 import { useState } from 'react';
-import { RotateCcw, RotateCw } from 'lucide-react';
 
 interface GarmentPreviewProps {
   garmentType: string;
@@ -15,7 +15,7 @@ export const GarmentPreview = ({ garmentType, designData, darkMode }: GarmentPre
     const baseColor = darkMode ? '#374151' : '#F3F4F6';
     return (
       <div 
-        className={`w-full h-80 rounded-lg flex items-center justify-center text-6xl`}
+        className={`w-full h-80 rounded-lg flex items-center justify-center text-6xl transition-all duration-300`}
         style={{ backgroundColor: baseColor }}
       >
         {garmentType === 'shirt' && '👕'}
@@ -25,6 +25,10 @@ export const GarmentPreview = ({ garmentType, designData, darkMode }: GarmentPre
         {garmentType === 'custom' && '👘'}
       </div>
     );
+  };
+
+  const toggleView = () => {
+    setViewSide(prevSide => prevSide === 'front' ? 'back' : 'front');
   };
 
   return (
@@ -37,11 +41,11 @@ export const GarmentPreview = ({ garmentType, designData, darkMode }: GarmentPre
         <h3 className="text-lg font-semibold">Live Preview</h3>
         <div className="flex space-x-2">
           <button
-            onClick={() => setViewSide(viewSide === 'front' ? 'back' : 'front')}
+            onClick={toggleView}
             className={`px-3 py-1 rounded-lg text-sm border transition-colors ${
               darkMode
-                ? 'border-gray-600 hover:bg-gray-700'
-                : 'border-gray-300 hover:bg-gray-100'
+                ? 'border-gray-600 hover:bg-gray-700 text-white'
+                : 'border-gray-300 hover:bg-gray-100 text-gray-700'
             }`}
           >
             {viewSide === 'front' ? 'Show Back' : 'Show Front'}
@@ -55,10 +59,10 @@ export const GarmentPreview = ({ garmentType, designData, darkMode }: GarmentPre
         {/* Overlay design elements */}
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center">
-            <div className="text-sm text-gray-500 mb-2">
+            <div className={`text-sm mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
               {viewSide.charAt(0).toUpperCase() + viewSide.slice(1)} View
             </div>
-            <div className="text-xs text-gray-400">
+            <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
               Design elements will appear here
             </div>
           </div>
@@ -66,7 +70,7 @@ export const GarmentPreview = ({ garmentType, designData, darkMode }: GarmentPre
       </div>
 
       <div className="mt-4 text-center">
-        <p className="text-sm text-gray-500">
+        <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
           {garmentType.charAt(0).toUpperCase() + garmentType.slice(1)} Preview
         </p>
       </div>
