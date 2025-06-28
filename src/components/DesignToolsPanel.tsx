@@ -1,5 +1,4 @@
-
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Brush, Type, Image, Palette, Undo, Redo, RotateCcw, Sparkles } from 'lucide-react';
 import { FabricText, FabricImage } from 'fabric';
 
@@ -26,6 +25,13 @@ export const DesignToolsPanel = ({ canvasRef, darkMode }: DesignToolsPanelProps)
     { id: 'color', name: 'Color', icon: Palette }
   ];
 
+  // Update brush color when color changes
+  useEffect(() => {
+    if (canvasRef && canvasRef.freeDrawingBrush) {
+      canvasRef.freeDrawingBrush.color = color;
+    }
+  }, [color, canvasRef]);
+
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file && canvasRef) {
@@ -41,6 +47,7 @@ export const DesignToolsPanel = ({ canvasRef, darkMode }: DesignToolsPanelProps)
               scaleY: 0.5,
             });
             canvasRef.add(img);
+            canvasRef.renderAll();
           });
         };
         imgElement.src = e.target?.result as string;
@@ -97,6 +104,7 @@ export const DesignToolsPanel = ({ canvasRef, darkMode }: DesignToolsPanelProps)
       });
       canvasRef.add(textObj);
       canvasRef.setActiveObject(textObj);
+      canvasRef.renderAll();
     }
     setShowTextInput(false);
     setShowAIRefine(false);
@@ -109,15 +117,16 @@ export const DesignToolsPanel = ({ canvasRef, darkMode }: DesignToolsPanelProps)
     
     if (!canvasRef) return;
 
+    // Reset drawing mode first
+    canvasRef.isDrawingMode = false;
+
     if (toolId === 'brush') {
       canvasRef.isDrawingMode = true;
-      // Ensure brush exists before setting properties
+      // Ensure brush exists and set properties
       if (canvasRef.freeDrawingBrush) {
         canvasRef.freeDrawingBrush.color = color;
         canvasRef.freeDrawingBrush.width = 3;
       }
-    } else {
-      canvasRef.isDrawingMode = false;
     }
 
     if (toolId === 'text') {
@@ -152,6 +161,12 @@ export const DesignToolsPanel = ({ canvasRef, darkMode }: DesignToolsPanelProps)
       objects.slice(1).forEach((obj: any) => canvasRef.remove(obj));
       canvasRef.renderAll();
     }
+  };
+
+  const clearAIChat = () => {
+    setShowAIRefine(false);
+    setAiSuggestions([]);
+    setTextInput('');
   };
 
   return (
@@ -208,6 +223,17 @@ export const DesignToolsPanel = ({ canvasRef, darkMode }: DesignToolsPanelProps)
         {/* Text Input */}
         {showTextInput && (
           <div className="space-y-3 p-4 rounded-xl bg-gray-50 dark:bg-gray-700">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium">Add Text</span>
+              {showAIRefine && (
+                <button
+                  onClick={clearAIChat}
+                  className="text-xs bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                >
+                  Clear AI
+                </button>
+              )}
+            </div>
             <input
               type="text"
               value={textInput}

@@ -29,31 +29,36 @@ export const DesignCanvas = ({
         backgroundColor: darkMode ? '#1F2937' : '#F9FAFB',
       });
 
-      // Wait for canvas to be fully initialized before setting up the brush
-      setTimeout(() => {
-        if (canvas.freeDrawingBrush) {
-          canvas.freeDrawingBrush.color = '#3B82F6';
-          canvas.freeDrawingBrush.width = 3;
-        }
-      }, 100);
+      // Initialize drawing mode and brush
+      canvas.isDrawingMode = false;
+      if (canvas.freeDrawingBrush) {
+        canvas.freeDrawingBrush.color = '#3B82F6';
+        canvas.freeDrawingBrush.width = 3;
+      }
 
       setFabricCanvas(canvas);
       setCanvasRef(canvas);
 
-      // Draw garment outline
-      drawGarmentOutline(canvas, garmentType, darkMode);
+      // Draw garment outline after a short delay
+      setTimeout(() => {
+        drawGarmentOutline(canvas, garmentType, darkMode);
+      }, 100);
 
       return () => {
         canvas.dispose();
       };
     }
-  }, [canvasRef.current, darkMode]);
+  }, []);
 
   useEffect(() => {
     if (fabricCanvas) {
       fabricCanvas.backgroundColor = darkMode ? '#1F2937' : '#F9FAFB';
       fabricCanvas.renderAll();
-      drawGarmentOutline(fabricCanvas, garmentType, darkMode);
+      
+      // Redraw garment outline when garment type or theme changes
+      setTimeout(() => {
+        drawGarmentOutline(fabricCanvas, garmentType, darkMode);
+      }, 50);
     }
   }, [garmentType, darkMode, fabricCanvas]);
 
@@ -95,6 +100,34 @@ export const DesignCanvas = ({
           evented: false,
         });
         break;
+      case 'pant':
+        outline = new Rect({
+          left: 120,
+          top: 80,
+          width: 160,
+          height: 300,
+          fill: 'transparent',
+          stroke: outlineColor,
+          strokeWidth: 2,
+          strokeDashArray: [5, 5],
+          selectable: false,
+          evented: false,
+        });
+        break;
+      case 'jacket':
+        outline = new Rect({
+          left: 70,
+          top: 80,
+          width: 260,
+          height: 340,
+          fill: 'transparent',
+          stroke: outlineColor,
+          strokeWidth: 2,
+          strokeDashArray: [5, 5],
+          selectable: false,
+          evented: false,
+        });
+        break;
       default:
         outline = new Rect({
           left: 80,
@@ -111,6 +144,7 @@ export const DesignCanvas = ({
     }
     
     canvas.add(outline);
+    canvas.sendToBack(outline);
     setGarmentOutline(outline);
     canvas.renderAll();
   };
@@ -126,15 +160,15 @@ export const DesignCanvas = ({
       <div className="flex justify-center">
         <canvas
           ref={canvasRef}
-          className={`border-2 rounded-lg cursor-crosshair ${
+          className={`border-2 rounded-lg ${
             darkMode ? 'border-gray-600' : 'border-gray-300'
           }`}
-          style={{ maxWidth: '100%', height: 'auto' }}
+          style={{ maxWidth: '100%', height: 'auto', cursor: 'crosshair' }}
         />
       </div>
       
       <div className="mt-4 text-center text-sm text-gray-500">
-        Draw, add text, or upload images to design your {garmentType}
+        Use the tools on the left to draw, add text, or upload images
       </div>
     </div>
   );

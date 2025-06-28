@@ -11,18 +11,23 @@ export const GarmentPreview = ({ garmentType, designData, darkMode }: GarmentPre
   const [viewSide, setViewSide] = useState('front');
 
   const getGarmentImage = () => {
-    // In a real app, these would be actual garment images
     const baseColor = darkMode ? '#374151' : '#F3F4F6';
+    const garmentEmoji = {
+      'shirt': '👕',
+      'pant': '👖', 
+      'dress': '👗',
+      'jacket': '🧥',
+      'custom': '👘'
+    }[garmentType] || '👕';
+
     return (
       <div 
-        className={`w-full h-80 rounded-lg flex items-center justify-center text-6xl transition-all duration-300`}
+        className={`w-full h-80 rounded-lg flex items-center justify-center text-6xl transition-all duration-300 ${
+          viewSide === 'back' ? 'transform scale-x-[-1]' : ''
+        }`}
         style={{ backgroundColor: baseColor }}
       >
-        {garmentType === 'shirt' && '👕'}
-        {garmentType === 'pant' && '👖'}
-        {garmentType === 'dress' && '👗'}
-        {garmentType === 'jacket' && '🧥'}
-        {garmentType === 'custom' && '👘'}
+        {garmentEmoji}
       </div>
     );
   };
@@ -57,7 +62,7 @@ export const GarmentPreview = ({ garmentType, designData, darkMode }: GarmentPre
         {getGarmentImage()}
         
         {/* Overlay design elements */}
-        <div className="absolute inset-0 flex items-center justify-center">
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
           <div className="text-center">
             <div className={`text-sm mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
               {viewSide.charAt(0).toUpperCase() + viewSide.slice(1)} View
@@ -71,7 +76,7 @@ export const GarmentPreview = ({ garmentType, designData, darkMode }: GarmentPre
 
       <div className="mt-4 text-center">
         <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-          {garmentType.charAt(0).toUpperCase() + garmentType.slice(1)} Preview
+          {garmentType.charAt(0).toUpperCase() + garmentType.slice(1)} Preview - {viewSide} side
         </p>
       </div>
     </div>
