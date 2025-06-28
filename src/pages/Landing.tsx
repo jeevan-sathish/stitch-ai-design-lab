@@ -99,7 +99,7 @@ const Landing = () => {
       }`}>
         <div className="container mx-auto px-4 text-center">
           <p className="text-gray-600 dark:text-gray-300">
-            Built with divine inspiration by{' '}
+            Builders on fire , love from 💖{' '}
             <span className="font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               Chandan Jeevan
             </span>
