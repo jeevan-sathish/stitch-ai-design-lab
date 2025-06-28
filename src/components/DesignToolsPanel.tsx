@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { Brush, Type, Image, Palette, Undo, Redo, RotateCcw, Sparkles } from 'lucide-react';
 import { FabricText, FabricImage } from 'fabric';
@@ -10,6 +11,7 @@ interface DesignToolsPanelProps {
 export const DesignToolsPanel = ({ canvasRef, darkMode }: DesignToolsPanelProps) => {
   const [activeTool, setActiveTool] = useState('select');
   const [color, setColor] = useState('#3B82F6');
+  const [textColor, setTextColor] = useState('#000000');
   const [textInput, setTextInput] = useState('');
   const [showTextInput, setShowTextInput] = useState(false);
   const [showAIRefine, setShowAIRefine] = useState(false);
@@ -99,7 +101,7 @@ export const DesignToolsPanel = ({ canvasRef, darkMode }: DesignToolsPanelProps)
         top: 150,
         fontFamily: 'Inter, sans-serif',
         fontSize: 24,
-        fill: color,
+        fill: textColor, // Use textColor instead of color
         editable: true,
       });
       canvasRef.add(textObj);
@@ -209,15 +211,29 @@ export const DesignToolsPanel = ({ canvasRef, darkMode }: DesignToolsPanelProps)
           })}
         </div>
 
-        {/* Color Picker */}
-        <div className="flex items-center space-x-3">
-          <label className="text-sm font-medium">Color:</label>
-          <input
-            type="color"
-            value={color}
-            onChange={(e) => setColor(e.target.value)}
-            className="w-10 h-10 rounded-lg border-2 border-gray-300 cursor-pointer"
-          />
+        {/* Color Pickers */}
+        <div className="space-y-3">
+          {/* Brush Color */}
+          <div className="flex items-center space-x-3">
+            <label className="text-sm font-medium">Brush Color:</label>
+            <input
+              type="color"
+              value={color}
+              onChange={(e) => setColor(e.target.value)}
+              className="w-10 h-10 rounded-lg border-2 border-gray-300 cursor-pointer"
+            />
+          </div>
+          
+          {/* Text Color */}
+          <div className="flex items-center space-x-3">
+            <label className="text-sm font-medium">Text Color:</label>
+            <input
+              type="color"
+              value={textColor}
+              onChange={(e) => setTextColor(e.target.value)}
+              className="w-10 h-10 rounded-lg border-2 border-gray-300 cursor-pointer"
+            />
+          </div>
         </div>
 
         {/* Text Input */}
